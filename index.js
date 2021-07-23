@@ -1,6 +1,7 @@
 const axios = require('axios');
 const crypto = require('crypto');
 const { response } = require('express');
+const { mainModule } = require('process');
 const querystring = require('querystring')
 
 async function restOperation(operation, url, endpoint, request) {
@@ -9,24 +10,18 @@ async function restOperation(operation, url, endpoint, request) {
 
   const config = {
     method: operation,
-    url: url+endpoint+'?'+querystring.stringify(query),
+    baseURL: url,
+    url: endpoint+'?'+querystring.stringify(query),
     headers: header,
-  }/*
-  //console.log(config)
-  let resp;
-  resp = axios(config).then(response => {
-    //console.log(response.data)
-    a = response.data
-  }).catch(error => {
-    console.log(error)
-  })
-  return resp*/
+  }
+  let response;
   try{
     const {data} = await axios(config)
-    return data
+    response = data
   } catch (error){
     console.log(error)
   }
+  return response
 }
 
 const signQuery = (query) => {
@@ -38,7 +33,7 @@ const signQuery = (query) => {
 
 const getTimeStamp = (date) => {return date.getTime();}
 
-const signedOperation = (query, params) => {
+async function signedOperation(query, params){
 
   const header = {
     'Content-Type': 'application/json',
@@ -51,10 +46,10 @@ const signedOperation = (query, params) => {
     header: header,
     query: signedQuery,
   }
-  return restOperation(params.operation, params.url, params.endpoint, request);
+  return restOperation(params.operation, params.url, params.endpoint, request)
 }
 
-const seeAccount = () => {
+async function seeAccount(){
 
   const query = {
     timestamp: getTimeStamp(date),
@@ -67,7 +62,7 @@ const seeAccount = () => {
   return signedOperation(query, params)
 }
 
-const sell = (symbol, quantity) => {
+async function sell(symbol, quantity){
 
   const query = {
     symbol: symbol,
@@ -87,16 +82,60 @@ const sell = (symbol, quantity) => {
   return signedOperation(query, params)
 }
 
-//const url = 'http://localhost:3005'
-const url = 'https://testnet.binance.vision'
-const sellEndpoint = '/api/v3/order'
-const accountEndpoint = '/api/v3/account'
+async function buy(symbol, quantity){
 
-const secret = 'L6kenliJi7CeD48DNabVynGpATGGZlqJRQArbQljwwDJO38oyz11n04TanT77aye';
-const apiKey = 'IGxgRh6B4rwmi6TDdv8IpMHgsrqJaSu0tdc0qvIYX6b4T9mnJaCHWVW8qH2Ds8Nc';
+  const query = {
+    symbol: symbol,
+    side: 'BUY',
+    type: 'MARKET',
+    quantity: quantity,
+    newClientOrderId: 'my_order_id_3',
+    newOrderRespType: 'ACK',
+    timestamp: getTimeStamp(date),
+  }
+  const params = {
+    operation: 'POST',
+    url: url,
+    endpoint: sellEndpoint,
+  }
 
+  return signedOperation(query, params)
+}
+
+async function allOrders(symbol){
+
+  const query = {
+    symbol: symbol,
+    limit: 500,
+    timestamp: getTimeStamp(date),
+  }
+  const params = {
+    operation: 'GET',
+    url: url,
+    endpoint: allOrdersEndpoint,
+  }
+
+  return signedOperation(query, params)
+}
+
+let a = 'nada'
 const date = new Date();
 
-console.log(seeAccount())
-//sell('BTCUSDT', 0.01)
-//console.log(seeAccount())
+  //const url = 'http://localhost:3005'
+  const url = 'https://testnet.binance.vision'
+  const sellEndpoint = '/api/v3/order'
+  const accountEndpoint = '/api/v3/account'
+  const allOrdersEndpoint = '/api/v3/allOrders'
+
+  const secret = 'L6kenliJi7CeD48DNabVynGpATGGZlqJRQArbQljwwDJO38oyz11n04TanT77aye';
+  const apiKey = 'IGxgRh6B4rwmi6TDdv8IpMHgsrqJaSu0tdc0qvIYX6b4T9mnJaCHWVW8qH2Ds8Nc';
+
+async function main(){
+  
+  //console.log(await allOrders('BTCUSDT'))
+  console.log(await seeAccount())
+  await buy('BTCUSDT', 0.01)
+  console.log(await seeAccount())
+}
+
+main()
