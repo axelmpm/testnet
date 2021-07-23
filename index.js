@@ -11,10 +11,10 @@ async function restOperation(operation, url, endpoint, request) {
     url: url+endpoint+'?'+querystring.stringify(data),
     headers: header,
   }
-  console.log(config)
+  //console.log(config)
   try {
-    const {data} = await axios(config);
-    return data
+    const {req, res} = await axios(config);
+    return req
   } catch (error) {
     console.log(error)
   }
@@ -42,8 +42,8 @@ const signedOperation = (data, params) => {
     header: header,
     data: signedData,
   }
-
-  return restOperation(params.operation, params.url, params.endpoint, request);
+  console.log(params.url+params.endpoint+'?'+querystring.stringify(signedData))
+  //return restOperation(params.operation, params.url, params.endpoint, request);
 }
 
 const seeAccount = () => {
@@ -89,8 +89,6 @@ const apiKey = 'IGxgRh6B4rwmi6TDdv8IpMHgsrqJaSu0tdc0qvIYX6b4T9mnJaCHWVW8qH2Ds8Nc
 
 const date = new Date();
 
-console.log(seeAccount())
+seeAccount()
 //sell('BTCUSDT', 0.01)
 //console.log(seeAccount())
-
-
