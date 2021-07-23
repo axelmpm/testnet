@@ -1,21 +1,30 @@
 const axios = require('axios');
 const crypto = require('crypto');
+const { response } = require('express');
 const querystring = require('querystring')
 
 async function restOperation(operation, url, endpoint, request) {
 
-  const { header, data } = request;
+  const { header, query} = request;
 
   const config = {
     method: operation,
-    url: url+endpoint+'?'+querystring.stringify(data),
+    url: url+endpoint+'?'+querystring.stringify(query),
     headers: header,
-  }
+  }/*
   //console.log(config)
-  try {
-    const {req, res} = await axios(config);
-    return req
-  } catch (error) {
+  let resp;
+  resp = axios(config).then(response => {
+    //console.log(response.data)
+    a = response.data
+  }).catch(error => {
+    console.log(error)
+  })
+  return resp*/
+  try{
+    const {data} = await axios(config)
+    return data
+  } catch (error){
     console.log(error)
   }
 }
@@ -29,39 +38,38 @@ const signQuery = (query) => {
 
 const getTimeStamp = (date) => {return date.getTime();}
 
-const signedOperation = (data, params) => {
+const signedOperation = (query, params) => {
 
   const header = {
     'Content-Type': 'application/json',
     'X-MBX-APIKEY': apiKey,
   }
 
-  const signedData = { ...data, signature: signQuery(data) }
+  const signedQuery = { ...query, signature: signQuery(query) }
 
   const request = {
     header: header,
-    data: signedData,
+    query: signedQuery,
   }
-  console.log(params.url+params.endpoint+'?'+querystring.stringify(signedData))
-  //return restOperation(params.operation, params.url, params.endpoint, request);
+  return restOperation(params.operation, params.url, params.endpoint, request);
 }
 
 const seeAccount = () => {
 
-  const data = {
+  const query = {
     timestamp: getTimeStamp(date),
   }
   const params = {
     operation: 'GET',
     url: url,
     endpoint: accountEndpoint,
-}
-  return signedOperation(data, params)
+  }
+  return signedOperation(query, params)
 }
 
 const sell = (symbol, quantity) => {
 
-  const data = {
+  const query = {
     symbol: symbol,
     side: 'SELL',
     type: 'MARKET',
@@ -76,7 +84,7 @@ const sell = (symbol, quantity) => {
     endpoint: sellEndpoint,
   }
 
-  return signedOperation(data, params)
+  return signedOperation(query, params)
 }
 
 //const url = 'http://localhost:3005'
@@ -89,6 +97,6 @@ const apiKey = 'IGxgRh6B4rwmi6TDdv8IpMHgsrqJaSu0tdc0qvIYX6b4T9mnJaCHWVW8qH2Ds8Nc
 
 const date = new Date();
 
-seeAccount()
+console.log(seeAccount())
 //sell('BTCUSDT', 0.01)
 //console.log(seeAccount())
